@@ -19,12 +19,20 @@ router.post('/send', async (req, res) => {
   }
 });
 
-// Get chat history
+// ✅ Get full chat history for user (sent and received)
 router.get('/history', async (req, res) => {
   try {
     const { username } = req.query;
+
+    if (!username) {
+      return res.status(400).json({ message: 'Username is required' });
+    }
+
     const messages = await Message.find({
-      recipients: { $in: [username] }
+      $or: [
+        { sender: username },
+        { recipients: { $in: [username] } }
+      ]
     }).sort({ timestamp: 1 });
 
     res.json(messages);
