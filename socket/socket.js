@@ -4,21 +4,22 @@ module.exports = function(io) {
   io.on('connection', (socket) => {
     console.log('🔌 New user connected:', socket.id);
 
-    // Receive message from client
-    socket.on('send-message', async (data) => {
+    // When message is received from client
+    socket.on('chat-message', async (data) => {
       try {
         // Save to MongoDB
         const newMessage = new Message({
           sender: data.sender,
-          recipients: data.recipients || [],
+          recipients: data.recipients ? data.recipients.split(',') : [],
           content: data.content || '',
-          mediaUrl: data.mediaUrl || null
+          mediaUrl: data.mediaUrl || null,
+          timestamp: data.timestamp || new Date().toISOString()
         });
 
         const savedMessage = await newMessage.save();
 
-        // Broadcast to all connected clients
-        io.emit('receive-message', savedMessage);
+        // Emit to all connected clients (real-time)
+        io.emit('chat-message', savedMessage);
       } catch (err) {
         console.error('❌ Error saving message:', err);
       }
